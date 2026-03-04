@@ -1,36 +1,35 @@
 "use client";
 
 import { useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../utils/supabase/client";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export default function AuthCallback() {
+  const router = useRouter();
 
-export default function AuthCallbackPage() {
   useEffect(() => {
-    const handleAuthRedirect = async () => {
-      // Complete the OAuth flow after redirect
-      const { data, error } = await supabase.auth.getSessionFromUrl();
+    async function handleAuth() {
+      // Exchange code for session (Supabase v2)
+      const { data: { session }, error } = await supabase.auth.exchangeCodeForSession();
+
       if (error) {
-        console.error("Error retrieving session:", error.message);
+        console.error("Error exchanging code for session:", error.message);
         return;
       }
 
-      // Optionally, you can store session info locally
-      console.log("Logged in user:", data.session?.user);
+      if (session) {
+        // Optionally, store session locally
+        localStorage.setItem("supabaseSession", JSON.stringify(session));
+        router.push("/dashboard"); // Redirect after login
+      }
+    }
 
-      // Redirect to homepage after login
-      window.location.href = "/";
-    };
-
-    handleAuthRedirect();
-  }, []);
+    handleAuth();
+  }, [router]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black text-white">
-      Logging you in...
+    <div className="flex items-center justify-center h-screen">
+      <p>Logging you in...</p>
     </div>
   );
 }
