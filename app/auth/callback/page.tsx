@@ -1,24 +1,28 @@
-"use client";
+'use client';
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
-export default function AuthCallback() {
+export default function AuthCallbackPage() {
   const router = useRouter();
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    const handleAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        router.push("/"); // Redirect to homepage/dashboard
-      } else {
-        router.push("/login"); // Redirect back to login if session failed
+    async function handleAuth() {
+      const { data, error } = await supabase.auth.getSessionFromUrl();
+      if (error) {
+        console.error(error);
+        return;
       }
-    };
+      router.push("/"); // redirect to homepage after login
+    }
     handleAuth();
   }, []);
 
-  return <p>Logging you in… please wait</p>;
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      Logging you in...
+    </div>
+  );
 }
