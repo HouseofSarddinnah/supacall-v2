@@ -1,41 +1,49 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    const fetchUser = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) console.error(error);
       setUser(user);
       setLoading(false);
     };
-    checkUser();
-  }, [supabase]);
+
+    fetchUser();
+  }, []);
 
   const handleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    window.location.reload(); // refresh to clear state
   };
 
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-black text-white">
-      SupaCall Loading...
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        Loading SupaCall...
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-black text-white p-6">
@@ -51,20 +59,20 @@ export default function Home() {
           </button>
         </div>
       ) : (
-        <div className="bg-zinc-900 border border-purple-500/50 p-10 rounded-3xl shadow-2xl text-center">
-          <h2 className="text-2xl font-bold mb-2">Welcome Back,</h2>
-          <p className="text-purple-400 font-mono mb-8">{user.email}</p>
-          <button
-            className="bg-purple-600 p-4 rounded-xl font-bold hover:bg-purple-700 transition-colors"
-          >
-            🚀 Start New Call
-          </button>
+        <div className="bg-gray-900 p-8 rounded-2xl border border-purple-500/30 shadow-2xl text-center">
+          <h2 className="text-2xl font-bold">Welcome Back,</h2>
+          <p className="text-purple-400 mb-4">{user.email}</p>
           <button
             onClick={handleLogout}
-            className="text-zinc-500 text-sm hover:text-white underline mt-4"
+            className="text-sm text-gray-400 hover:text-white underline"
           >
             Logout
           </button>
+          <div className="mt-6">
+            <button className="bg-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition">
+              🚀 Start New Call
+            </button>
+          </div>
         </div>
       )}
     </main>
