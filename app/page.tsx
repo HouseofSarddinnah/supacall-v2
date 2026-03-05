@@ -21,7 +21,7 @@ export default function Contacts() {
   // 2. Initialize Supabase directly with your keys
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    "use client";
   );
 
   useEffect(() => {
